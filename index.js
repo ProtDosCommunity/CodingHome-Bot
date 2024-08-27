@@ -3,19 +3,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Intents, EmbedBuilder, GuildManager } = require('discord.js');
 const token = process.env['TOKEN'];
-
-// server imports
-const express = require('express');
-const app = express();
-const port = 3000;
-// create main route
-app.get('/', (req, res) => res.send("CodingHome daily coding challenge bot is online. ✅"));
-// instantiate server
-app.listen(port, () => console.log(`App is listening at http://localhost:${port}`));
-
+const channelId = process.env['CHANNEL_ID'];
 
 // New client instance with specified intents
-const client = new Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
+const client = new Client({intents: 512 | 1});
 
 // Read commands
 client.commands = new Collection();
@@ -36,7 +27,7 @@ client.once('ready', () => {
 
 
 // Dynamically execute commands
-client.on('interactionCreate', async interaction => {
+client.on('interactionCreate', async function(interaction){
   if (!interaction.isCommand()) return;
 
   const command = client.commands.get(interaction.commandName);
@@ -51,12 +42,6 @@ client.on('interactionCreate', async interaction => {
     await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
   }
 });
-
-
-// Setup database
-
-const Database = require("@replit/database");
-const db = new Database();
 
 
 
@@ -77,38 +62,7 @@ var questions = {
 };
 
 
-
-
-
-
-
-
-
-
-
-function dailyChallenge() {
-  db.get('time').then((time) => {
-    function checkDate() {
-      // Get today's date
-      var today = new Date();
-      today.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to zero
-
-      // Create a previous date (replace this with your own previous date)
-      var x = new Date(time);
-      x.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to zero
-
-      // Compare today's date with x
-      var timeDifference = today.getTime() - x.getTime();
-      var daysDifference = timeDifference / (1000 * 3600 * 24);
-
-      if (daysDifference >= 1) {
-        // Today is at least 1 day past x
-        yourFunction(); // Replace `yourFunction` with the function you want to run
-      }
-    }
-
-    // Function to be executed if today is at least 1 day past var x's date
-    function yourFunction() {
+function yourFunction(){
       console.log("Today is at least 1 day past var x's date!");
       var day;
       switch (new Date().getDay()) {
@@ -157,22 +111,35 @@ function dailyChallenge() {
           text: 'New challenges appear each day!',
         },
       };
-      client.channels.cache.get("1145415012865818717").send({ content: '<@&1107290517299011605>', embeds: [exampleEmbed], }).catch(console.error);
-      var x = new Date();
-      db.set('time', x).then(() => {
+      client.channels.cache.get(channelId).send({embeds: [exampleEmbed]}).catch(console.error);
+    };
 
-      })
+var lastDay = 0;
+function checkDate() {
+      console.log("Checking date");
+      // Get today's date
+      var today = new Date();
 
-    }
+      // Create a previous date (replace this with your own previous date)
+      var x = new Date(lastDay);
 
-    // Call the checkDate function to initiate the comparison
-    checkDate();
+      // Compare today's date with x
+      var timeDifference = today.getTime() - x.getTime();
+      var daysDifference = timeDifference / (1000 * 3600 * 24);
+
+      if (daysDifference >= 1) {
+        // Today is at least 1 day past x
+	yourFunction(); // Replace `yourFunction` with the function you want to run
+	      lastDay = today.getTime();
+	}
+}
 
 
 
 
 
-  })
+function dailyChallenge() {
+	setInterval(checkDate, 5000);
 }
 module.exports = dailyChallenge;
 
